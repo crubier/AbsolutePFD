@@ -38,15 +38,15 @@ public class HeavyHudPanel extends JPanel {
 	private Path2D northMeridian;
 	private Path2D southMeridian;
 	private Path2D eastMeridian;
-	
+
 	private Path2D parallelp45;
 	private Path2D parallelm45;
 	private Path2D meridianp45;
 	private Path2D meridianm45;
 
-	
+
 	private Point2D target;
-	
+
 
 	private Projection projection;
 
@@ -58,7 +58,7 @@ public class HeavyHudPanel extends JPanel {
 		this.pitch = Math.toRadians(0);
 		this.yaw = Math.toRadians(0);
 		this.roll = Math.toRadians(0);
-		
+
 		this.setTarget(new Point2D.Double(34., 52.));
 
 		this.horizon = new Path2D.Double();
@@ -87,24 +87,24 @@ public class HeavyHudPanel extends JPanel {
 			this.northMeridian.lineTo(Math.PI / 2. - pos * Math.PI, 0.);
 			this.southMeridian.lineTo(Math.PI / 2. - pos * Math.PI,Math.PI);
 			this.eastMeridian.lineTo(Math.PI / 2. - pos * Math.PI, Math.PI / 2.);
-			
+
 			this.parallelp45.lineTo(Math.PI / 4.,-1. * Math.PI + pos * Math.PI);
 			this.parallelm45.lineTo(-1.* Math.PI / 4., -1. * Math.PI + pos * Math.PI);
 			this.meridianp45.lineTo(Math.PI / 2. - pos * Math.PI, Math.PI / 4.);
 			this.meridianm45.lineTo(Math.PI / 2. - pos * Math.PI, -1.*Math.PI / 4.);
-			
+
 		}
 		for (int i = 0; i < nbpts; i++) {
 			pos = i / (1. * nbpts);
 			this.horizon.lineTo(0., pos * Math.PI);
-			
+
 			this.eastMeridian.lineTo(-1. * Math.PI / 2. + pos * Math.PI, -1.	* Math.PI / 2.);
-					
+
 			this.parallelp45.lineTo(Math.PI / 4., pos * Math.PI);
 			this.parallelm45.lineTo(-1.* Math.PI / 4.,pos * Math.PI);
 			this.meridianp45.lineTo(-1. * Math.PI / 2. + pos * Math.PI, Math.PI+Math.PI / 4.);
 			this.meridianm45.lineTo(-1. * Math.PI / 2. + pos * Math.PI, Math.PI-1.*Math.PI / 4.);
-				
+
 		}
 
 		this.projection = new LambertAzimuthalProjection();
@@ -181,7 +181,7 @@ public class HeavyHudPanel extends JPanel {
 		g2.setPaint(Color.WHITE);
 		g2.setStroke(new BasicStroke(3));
 		g2.draw(northMeridianT);
-		
+
 		g2.setPaint(Color.WHITE);
 		g2.setStroke(new BasicStroke(1));
 		g2.draw(southMeridianT);
@@ -191,7 +191,7 @@ public class HeavyHudPanel extends JPanel {
 		g2.setStroke(new BasicStroke(1, BasicStroke.CAP_ROUND,
 				BasicStroke.JOIN_ROUND, 10, dashPattern, 0));
 		g2.draw(eastMeridianT);
-		
+
 		g2.setPaint(new Color(255,255,255,100));
 		float[] dashPattern2 = { 2, 4 };
 		g2.setStroke(new BasicStroke(1, BasicStroke.CAP_ROUND,
@@ -200,9 +200,9 @@ public class HeavyHudPanel extends JPanel {
 		g2.draw(parallelm45T);
 		g2.draw(meridianp45T);
 		g2.draw(meridianm45T);
-		
-		
-		
+
+
+
 		double size=Math.min(this.getBounds().getWidth(),this.getBounds().getHeight());
 
 		Shape bound = new Ellipse2D.Double((this.getBounds().getWidth()-size)/2, (this.getBounds().getHeight()-size)/2,size,size);
@@ -215,16 +215,16 @@ public class HeavyHudPanel extends JPanel {
 		g2.fill(mask);
 		g2.setPaint(Color.WHITE);
 		g2.draw(bound);
-		
+
 		Shape center = new Ellipse2D.Double(0.5 * this.getBounds().getWidth()
 				- 6, 0.5
 				* this.getBounds().getHeight()- 6, 12, 12);
-		
+
 		g2.setPaint(Color.WHITE);
 		g2.draw(center);
-		
-		
-		
+
+
+
 		Point2D targetT=projection.project(this.getTarget());
 		transformer.transform(targetT, targetT);
 		Path2D targetPath = new Path2D.Double();
@@ -244,7 +244,8 @@ public class HeavyHudPanel extends JPanel {
 	}
 
 	public void setLambda(double lambda) {
-		this.yaw = lambda;
+
+		this.yaw = ((lambda+Math.PI)%(2.*Math.PI))-Math.PI;
 	}
 
 	public double getPhi() {
@@ -252,15 +253,15 @@ public class HeavyHudPanel extends JPanel {
 	}
 
 	public void setPhi(double phi) {
-		this.pitch = phi;
+		this.pitch = ((phi+Math.PI/2.)%Math.PI)-Math.PI/2.;
 	}
 
 	public double getPsi() {
-		return roll;
+		return roll ;
 	}
 
 	public void setPsi(double psi) {
-		this.roll = psi;
+		this.roll = ((psi+Math.PI/2.)%Math.PI)-Math.PI/2.;
 	}
 
 	public Point2D getTarget() {
@@ -272,28 +273,29 @@ public class HeavyHudPanel extends JPanel {
 	}
 
 	public class HudMotionListener implements MouseListener,
-			MouseMotionListener, KeyListener {
+	MouseMotionListener, KeyListener {
 
 		private HeavyHudPanel hud;
 
-		private double x0, y0;
+		private Point2D lastPoint;
+		private Point2D lastPos;
 
 		public HudMotionListener(HeavyHudPanel hud) {
 			super();
 			this.hud = hud;
 		}
-		
+
 		public Point2D getRelativePosition(Point2D position) {
 			double size=Math.min(hud.getBounds().getWidth(),hud.getBounds().getHeight());
-			
-			double x=(position.getX()-(hud.getBounds().getWidth()-size)/2)/size;
-			double y=(position.getY()-(hud.getBounds().getHeight()-size)/2)/size;
-			
-			x=x*4-2;
-			y=y*4-2;
-			
+
+			double x=(position.getX()-(1.*hud.getBounds().getWidth()-size)/2.)/size;
+			double y=(position.getY()-(1.*hud.getBounds().getHeight()-size)/2.)/size;
+
+			x=x*4.-2.;
+			y=y*4.-2.;
+
 			return new Point2D.Double(x,y);
-			
+
 		}
 
 		@Override
@@ -305,12 +307,14 @@ public class HeavyHudPanel extends JPanel {
 				}
 			}
 			else {
-				this.hud.setPhi(0.);
-				this.hud.setLambda(0.);
-				this.hud.setPsi(0.);
+				Point2D relativePos=this.getRelativePosition(arg0.getPoint());
+				if(relativePos.distance(0., 0.)<2) {
+					this.hud.setPhi(this.hud.projection.inverse(relativePos).getX());
+					this.hud.setLambda(this.hud.projection.inverse(relativePos).getY());
+					this.hud.setPsi(0.);
+				}
+				
 			}
-			
-			
 
 			this.hud.repaint();
 		}
@@ -327,13 +331,10 @@ public class HeavyHudPanel extends JPanel {
 
 		@Override
 		public void mousePressed(MouseEvent arg0) {
-//			this.x0 = arg0.getX();
-//			this.y0 = arg0.getY();
-			
 			Point2D relativePos=this.getRelativePosition(arg0.getPoint());
 			if(relativePos.distance(0., 0.)<2) {
-				this.x0=this.hud.projection.inverse(relativePos).getX();
-				this.y0=this.hud.projection.inverse(relativePos).getY();
+				this.lastPoint=this.hud.projection.inverse(relativePos);
+				this.lastPos=new Point2D.Double(this.hud.getPhi(),this.hud.getLambda());
 			}
 
 		}
@@ -345,22 +346,23 @@ public class HeavyHudPanel extends JPanel {
 
 		@Override
 		public void mouseDragged(MouseEvent arg0) {
-			
+
 			Point2D relativePos=this.getRelativePosition(arg0.getPoint());
 			if(relativePos.distance(0., 0.)<2) {
-				double argx=this.hud.projection.inverse(relativePos).getX();
-				double argy=this.hud.projection.inverse(relativePos).getY();
-			
-			
-			double x = argx - this.x0;
-			double y = argy - this.y0;
+				Point2D arg=this.hud.projection.inverse(relativePos);
 
-			this.hud.setPhi(this.hud.getPhi() + y );
-			this.hud.setLambda(this.hud.getLambda() + x );
-			
-			this.x0 = argx;
-			this.y0 = argy;
-			this.hud.repaint();
+				double x = arg.getX() - this.lastPoint.getX();
+				double y = arg.getY() - this.lastPoint.getY();
+
+				System.out.println("---------------------------\n" + arg + "\n" + this.lastPoint);
+				
+				this.hud.setPhi(this.lastPos.getX() -x);
+				this.hud.setLambda( this.lastPos.getY() -y );
+		
+
+				this.lastPoint=this.hud.projection.inverse(relativePos);
+				this.lastPos=new Point2D.Double(this.hud.getPhi(),this.hud.getLambda());
+				this.hud.repaint();
 			}
 
 		}
@@ -392,7 +394,7 @@ public class HeavyHudPanel extends JPanel {
 				break;
 			}
 			this.hud.repaint();
-			
+
 		}
 
 		@Override

@@ -75,7 +75,7 @@ public class LambertAzimuthalProjection implements Projection {
 		double phi=Math.asin(Math.sin(this.phi0)*Math.cos(c)+y*Math.cos(this.phi0)*Math.sin(c)/rho);
 		double lambda=this.lambda0+Math.atan2(x*Math.sin(c), rho*Math.cos(this.phi0)*Math.cos(c)-y*Math.sin(this.phi0)*Math.sin(c));
 
-		Point2D res = new Point2D.Double(phi, lambda);
+		Point2D res = new Point2D.Double(((phi+Math.PI/2.)%Math.PI)-Math.PI/2., ((lambda+Math.PI)%(2.*Math.PI))-Math.PI);
 		return res;
 	}
 
